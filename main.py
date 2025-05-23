@@ -48,7 +48,7 @@ from core.handlers.ToDo_handlers.ChangeTask import ChangeTask
 from core.handlers.ToDo_handlers.DeleteTask import DeleteTask
 from core.handlers.ToDo_handlers.ViewTask import ViewTask
 
-telegram_api_key = '8103080007:AAHsW0iliicN_DNEQsUMNCwmou05tgbm5SI'  # Telegram secret api key | Enter your secret api key here. If you need api key - @BotFather will give you.
+telegram_api_key = ''  # Telegram secret api key | Enter your secret api key here. If you need api key - @BotFather will give you.
 dispatcher = Dispatcher()  # Dispatcher entity
 bot_entity = Bot(token=telegram_api_key)  # Main bot entity
 keyboard: ReplyKeyboardMarkup  # Keyboard for inline buttons in bot

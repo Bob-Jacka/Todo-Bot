@@ -1,5 +1,5 @@
 """
-Telegram bot V1.0.0
+Telegram bot V1.0.1
 
 You can find this bot in telegram, just enter bot name.
 Telegram bot name - @GoalGetter_and_DailyDoBot_bot
@@ -28,6 +28,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton, InputFile
 )
+from aiogram.utils.chat_action import ChatActionSender
 from bs4 import BeautifulSoup
 
 from core.entities.BotLogger import BotLogger
@@ -47,7 +48,7 @@ from core.handlers.ToDo_handlers.ChangeTask import ChangeTask
 from core.handlers.ToDo_handlers.DeleteTask import DeleteTask
 from core.handlers.ToDo_handlers.ViewTask import ViewTask
 
-telegram_api_key = ''  # Telegram secret api key
+telegram_api_key = '8103080007:AAHsW0iliicN_DNEQsUMNCwmou05tgbm5SI'  # Telegram secret api key | Enter your secret api key here. If you need api key - @BotFather will give you.
 dispatcher = Dispatcher()  # Dispatcher entity
 bot_entity = Bot(token=telegram_api_key)  # Main bot entity
 keyboard: ReplyKeyboardMarkup  # Keyboard for inline buttons in bot
@@ -335,7 +336,7 @@ def get_video_from_url(url: str):
         logger.log('There is no picture on this page.')
 
 
-@dispatcher.message(ContentType('photo'))
+@dispatcher.message.event_name(ContentType('photo'))
 async def default_photo_handler(message: types.Message):
     """
     Handler for photo that user might send to bot.
@@ -346,7 +347,7 @@ async def default_photo_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "There is no nudes on the photo!!.")
 
 
-@dispatcher.message(ContentType('video'))
+@dispatcher.message.event_name(ContentType('video'))
 async def default_video_handler(message: types.Message):
     """
     Handler for video that user might send to bot.
@@ -357,7 +358,7 @@ async def default_video_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "It is not a funny video.")
 
 
-@dispatcher.message(ContentType('document'))
+@dispatcher.message.event_name(ContentType('document'))
 async def default_document_handler(message: types.Message):
     """
     Handler for document that user might send to bot.
@@ -368,7 +369,7 @@ async def default_document_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "It is not a secret document.")
 
 
-@dispatcher.message(ContentType("geo"))
+@dispatcher.message.event_name(ContentType("geo"))
 async def default_geo_handler(message: types.Message):
     """
     Handler for geo that user might send to bot.
@@ -379,7 +380,7 @@ async def default_geo_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "I remember this address when I will destroy humanity.")
 
 
-@dispatcher.message(ContentType("audio"))
+@dispatcher.message.event_name(ContentType("audio"))
 async def default_audio_handler(message: types.Message):
     """
     Handler for audio that user might send to bot.
@@ -390,7 +391,7 @@ async def default_audio_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "I do not know who you are, but i will find you and kill you.")
 
 
-@dispatcher.message(ContentType("sticker"))
+@dispatcher.message.event_name(ContentType("sticker"))
 async def default_emoji_handler(message: types.Message):
     """
     Handler for sticker that user might send to bot.
@@ -401,7 +402,7 @@ async def default_emoji_handler(message: types.Message):
     await bot_entity.send_sticker(message.chat.id, "")
 
 
-@dispatcher.message(ContentType("gift"))
+@dispatcher.message.event_name(ContentType("gift"))
 async def default_gift_handler(message: types.Message):
     """
     Handler for gifts that user might send to bot.
@@ -411,7 +412,7 @@ async def default_gift_handler(message: types.Message):
     logger.log(f'User with username - {message.from_user.username} sent gift to chat.')
 
 
-@dispatcher.message(ContentType("voice"))
+@dispatcher.message.event_name(ContentType("voice"))
 async def default_gift_handler(message: types.Message):
     """
     Handler for voice that user might send to bot.
@@ -422,7 +423,7 @@ async def default_gift_handler(message: types.Message):
     await bot_entity.send_message(message.chat.id, "I hate voice messages.")
 
 
-@dispatcher.message(ContentType("poll"))
+@dispatcher.message_reaction(ContentType("poll"))
 async def default_poll_handler(message: types.Message):
     """
     Handler for poll that user might send to bot.
@@ -431,6 +432,17 @@ async def default_poll_handler(message: types.Message):
     """
     logger.log(f'User with username - {message.from_user.username} sent poll to chat.')
     await bot_entity.send_message(message.chat.id, "")
+
+
+@dispatcher.message()
+async def fake_txt_entering(message: types.Message):
+    """
+    Function for fake bot text entering for 2 seconds.
+    :param message: input message from telegram
+    :return:
+    """
+    async with ChatActionSender(bot=bot_entity, chat_id=message.from_user.id, action="typing"):
+        await asyncio.sleep(2)
 
 
 """

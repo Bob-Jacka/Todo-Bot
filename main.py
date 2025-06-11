@@ -1,5 +1,5 @@
 """
-Telegram bot V1.1.2
+Telegram bot V1.2.0
 
 You can find this bot in telegram, just enter bot name.
 Telegram bot name - @GoalGetter_and_DailyDoBot_bot
@@ -8,7 +8,7 @@ Knows all about your tasks and your secret desires...
 Will notify you about your tasks and delete task if you not want to complete it.
 Work only if I start python execution, or you can clone this repository with telegram api key and own your bot.
 
-author - cupcake_wrld
+Author - cupcake_wrld
 """
 
 import asyncio
@@ -38,8 +38,15 @@ from aiogram.types import (
 from aiogram.utils.chat_action import ChatActionSender
 from bs4 import BeautifulSoup
 
+from BotSettings import (
+    random_cat_gifs_site,
+    random_cat_pic_site,
+    bot_age, strong_lang_danger, sexual_photos_danger, violent_danger
+)
+from core.entities.AgeForm import AgeForm
 from core.entities.BotLogger import BotLogger
 from core.entities.DatabaseController import DatabaseController
+from core.entities.Database_realization.ValidDatabasesType import ValidDatabasesType
 from core.entities.ToDoTask import ToDoTask
 from core.handlers.OtherHandlers.ByeHandler import ByeHandler
 from core.handlers.OtherHandlers.HelpBot import HelpBot
@@ -65,13 +72,24 @@ If you need api key - @BotFather will give you.
 Replace with your key or variable from file with key.
 """
 
-dispatcher = Dispatcher()  # Dispatcher entity
-bot_entity = Bot(token=telegram_api_key)  # Main bot entity
+dispatcher = Dispatcher()
+"""
+Dispatcher entity, responsible for polling messages from telegram
+"""
+
+bot_entity = Bot(token=telegram_api_key)
+"""
+Main bot entity
+"""
+
 custom_commands_router: Router = Router()
 keyboard: ReplyKeyboardMarkup  # Keyboard for inline buttons in bot
 
 logger = BotLogger("bot_logging")  # Logger entity
-db_controller = DatabaseController("Telegram_bot_database", 'local', is_static_base=True)  # Controller of the database.
+db_controller = DatabaseController("Telegram_bot_database", ValidDatabasesType.LOCAL, is_static_base=True)
+"""
+Controller of the database.
+"""
 
 
 def random_dirty_word() -> str:
@@ -115,8 +133,29 @@ async def bot_start(message: Message = None):
         db_controller.create_database("LocalDB" + str(message.chat.id) + " - database")
         logger.log(db_controller.get_database_name() + " created")
         logger.log('Bot started working!!')
+
+        await user_age_analyze(message)
+
     except Exception as e:
         logger.log(f"An exception occurred in starting bot entity - {e.with_traceback(None)}")
+
+
+async def user_age_analyze(message: Message) -> None:
+    """
+    Function for user age analyze by simple questions
+    :return: user age for bot passive aggression into bot_age
+    """
+    try:
+        await bot_entity.send_message(message.chat.id, "Вам нужно пройти тест для определения вашего возраста")
+        await bot_entity.send_message(message.chat.id, "Вам будут заданы некоторые простые (с виду) вопросы")
+        await bot_entity.send_message(message.chat.id, "Итак, начнем...")
+
+        # Age form flow start:
+        await AgeForm.name.set()
+        await message.reply("Привет! Как тебя зовут?")
+
+    except Exception as e:
+        logger.log(f"An exception occurred in user age analyze - {e.with_traceback(None)}")
 
 
 @dispatcher.message(NotifyHandler())
@@ -293,14 +332,14 @@ async def default_txt_handler(message: Message):
         user_name = message.from_user.username
         match coin_flip:
             case 'gif':
-                outputfile = get_video_from_url('https://randomcatgifs.com/')
+                outputfile = get_video_from_url(random_cat_gifs_site)
                 await bot_entity.send_video(chat_id, outputfile)
                 logger.log(user_name + ' received gif video from bot')
                 os.remove(outputfile.filename)
                 logger.log("Video deleted from local")
 
             case 'pic':
-                outputfile = get_image_from_url('https://mimimi.ru/random')
+                outputfile = get_image_from_url(random_cat_pic_site)
                 await bot_entity.send_photo(chat_id, outputfile)
                 logger.log(user_name + ' received picture from bot')
                 os.remove(outputfile.filename)
@@ -311,9 +350,9 @@ async def default_txt_handler(message: Message):
         logger.log(f'Error occurred in default handler - {e.with_traceback(None)}')
 
 
-def download_res(res_url: str):
+def __download_res(res_url: str):
     """
-    Function for downloading resource (image or video) from network.
+    Private function for downloading resource (image or video) from network.
     :param res_url: url address.
     :return: resource file name.
     """
@@ -345,7 +384,7 @@ def get_image_from_url(url: str) -> FSInputFile | None:
                 from urllib.parse import urljoin
                 img_url = urljoin(url, img_url)
 
-            return download_res(img_url)
+            return __download_res(img_url)
         else:
             logger.log('There is no picture on this page')
     except Exception as e:
@@ -371,7 +410,7 @@ def get_video_from_url(url: str) -> FSInputFile | None:
                 from urllib.parse import urljoin
                 video_url = urljoin(url, video_url)
 
-            return download_res(video_url)
+            return __download_res(video_url)
         else:
             logger.log('There is no video on this page')
     except Exception as e:
@@ -400,7 +439,11 @@ async def default_photo_handler(message: Message):
 
         await state_with.get_state()
         await state_with.get_data()
-        await bot_entity.send_message(message.chat.id, "There is no nudes on the photo!!")
+        if bot_age >= sexual_photos_danger:
+            await bot_entity.send_message(message.chat.id, "There is no nudes on the photo!!")
+            logger.log(f"Message with sexual pod text occurred with user - {message.from_user.username}")
+        else:
+            pass
     except Exception as e:
         logger.log(f'Error in photo handle - {e.with_traceback(None)}')
 
@@ -456,7 +499,10 @@ async def default_audio_handler(message: Message):
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent audio to chat')
-        await bot_entity.send_message(message.chat.id, "I do not know who you are, but i will find you and kill you.")
+        if bot_age >= violent_danger:
+            await bot_entity.send_message(message.chat.id, "I do not know who you are, but i will find you and kill you.")
+        else:
+            pass
     except Exception as e:
         logger.log(f'Error in emoji (sticker) handle - {e.with_traceback(None)}')
 
@@ -466,11 +512,14 @@ async def default_emoji_handler(message: Message):
     """
     Handler for sticker that user might send to bot.
     :param message: input message from telegram
-    :return:
+    :return: angry comment about your intelligence
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent emoji to chat')
-        await bot_entity.send_sticker(message.chat.id, "Засунь свои стикеры знаешь куда.")
+        if bot_age > sexual_photos_danger:
+            await bot_entity.send_sticker(message.chat.id, "Засунь свои стикеры знаешь куда.")
+        else:
+            await bot_entity.send_sticker(message.chat.id, "Мне не нравятся твои стикеры.")
     except Exception as e:
         logger.log(f'Error in emoji (sticker) handle - {e.with_traceback(None)}')
 
@@ -509,11 +558,14 @@ async def default_poll_handler(message: Message):
     """
     Handler for poll that user might send to bot.
     :param message: input message from telegram
-    :return:
+    :return: active aggression to user who like send useless polls
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent poll to chat')
-        await bot_entity.send_message(message.chat.id, "Не нужен мне твой опрос.")
+        if bot_age > strong_lang_danger:
+            await bot_entity.send_message(message.chat.id, "Засунь свой опрос в ж....")
+        else:
+            await bot_entity.send_message(message.chat.id, "Нет спасибо")
     except Exception as e:
         logger.log(f"An error occurred in poll handle - {e.with_traceback(None)}")
 
@@ -523,7 +575,7 @@ async def fake_txt_entering(message: Message):
     """
     Function for fake bot text entering for 2 seconds.
     :param message: input message from telegram
-    :return: a sense of security
+    :return: a sense of safety and a little bit of passive aggression
     """
     try:
         async with ChatActionSender(bot=bot_entity, chat_id=message.from_user.id, action="typing"):

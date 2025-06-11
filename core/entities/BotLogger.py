@@ -78,3 +78,35 @@ class BotLogger(Logger):
         :return:
         """
         return self.log_file
+
+    @override
+    def setLevel(self, level):
+        super().setLevel(level)
+
+    @override
+    def debug(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().debug(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def info(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().info(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def warning(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().warning(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def warn(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().warn(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def error(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().error(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def exception(self, msg, *args, exc_info=True, stack_info=False, stacklevel=1, extra=None):
+        super().exception(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+
+    @override
+    def critical(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
+        super().critical(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)

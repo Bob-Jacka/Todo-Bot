@@ -19,10 +19,10 @@ class DatabaseController:
     Database indifferent controller entity
     """
 
-    base_name: str
-    base_type: ValidDatabasesType  # type maybe sqlite, postgres or mysql
-    is_static: bool  # if true - creates local key-value database
-    logger: BotLogger  # local logger entity
+    __base_name: str
+    __base_type: ValidDatabasesType  # type maybe sqlite, postgres or mysql
+    __is_static: bool  # if true - creates local key-value database
+    __logger: BotLogger  # local logger entity
 
     database: AbstractDatabase  # single entity of database in controller
 
@@ -33,10 +33,10 @@ class DatabaseController:
         :param base_type: type of the database in enum
         :param is_static_base: special param for local bases
         """
-        self.base_name = base_name
-        self.base_type = base_type
-        self.is_static = is_static_base
-        self.logger = BotLogger("Database_logger_" + base_name)
+        self.__base_name = base_name
+        self.__base_type = base_type
+        self.__is_static = is_static_base
+        self.__logger = BotLogger("Database_logger_" + base_name)
 
     def create_database(self, database_name: str):
         """
@@ -44,45 +44,46 @@ class DatabaseController:
         :param database_name: name of the database
         :return: none
         """
-        if self.is_static:
+        if self.__is_static:
             self.database: LocalDatabase = LocalDatabase()
+            self.__logger.log('Local database created')
         else:
             abstract: AbstractDatabase
-            match self.base_type:
+            match self.__base_type:
 
                 case ValidDatabasesType.MONGO:
                     abstract = MongoDatabase()
-                    self.logger.log("Mongo db created")
+                    self.__logger.log("Mongo db created")
 
                 case ValidDatabasesType.CASSANDRA:
                     abstract = CassandraDatabase()
-                    self.logger.log("Cassandra db created")
+                    self.__logger.log("Cassandra db created")
 
                 case ValidDatabasesType.NEO4J:
                     abstract = Neo4jDatabase()
-                    self.logger.log("Neo4j db created")
+                    self.__logger.log("Neo4j db created")
 
                 case ValidDatabasesType.REDIS:
                     abstract = RedisDatabase()
-                    self.logger.log("Redis db created")
+                    self.__logger.log("Redis db created")
 
                 case ValidDatabasesType.MY_SQL:
                     abstract = MySqlDatabase()
-                    self.logger.log("MySql db created")
+                    self.__logger.log("MySql db created")
 
                 case ValidDatabasesType.SQLITE:
                     abstract = SqliteDatabase()
-                    self.logger.log("sqlite db created")
+                    self.__logger.log("sqlite db created")
 
                 case ValidDatabasesType.POSTGRES:
                     abstract = PostgresDatabase()
-                    self.logger.log("Postgres db created")
+                    self.__logger.log("Postgres db created")
 
                 case _:
-                    self.logger.log(f"database does not support - {self.base_type}")
+                    self.__logger.log(f"database does not support - {self.__base_type}")
 
             self.database = abstract
-            self.logger.log(f"Database created with name - '{database_name}'")
+            self.__logger.log(f"Database created with name - '{database_name}'")
 
     def create_table(self, table_name: str) -> bool:
         """
@@ -90,12 +91,12 @@ class DatabaseController:
         :param table_name: name of the table
         :return: result of the operation
         """
-        if self.is_static:
+        if self.__is_static:
             self.database.create_table(table_name)
-            self.logger.log(f"Create table with name - '{table_name}'")
+            self.__logger.log(f"Create table with name - '{table_name}'")
             return True
         else:
-            self.logger.log(f"Create table with name - '{table_name}'")
+            self.__logger.log(f"Create table with name - '{table_name}'")
             return True
 
     ##############Delete
@@ -106,15 +107,15 @@ class DatabaseController:
         :param table_name: name of the table
         :return: result of the operation
         """
-        if self.is_static:
+        if self.__is_static:
             if self.is_table_created(table_name):
                 self.database.delete_table(table_name)
-                self.logger.log(f"Delete entity in table - '{table_name}'")
+                self.__logger.log(f"Delete entity in table - '{table_name}'")
                 return True
             else:
                 return False
         else:
-            self.logger.log(f"Delete entity in table - '{table_name}'")
+            self.__logger.log(f"Delete entity in table - '{table_name}'")
             return False
 
     def delete_element_from_table(self, table_name: str, id: str):
@@ -124,11 +125,11 @@ class DatabaseController:
         :param id: unique identifier of the element in database
         :return: none
         """
-        if self.is_static:
+        if self.__is_static:
             self.database.delete_element(id)
-            self.logger.log(f"Delete entity with id - {id} in table - '{table_name}'")
+            self.__logger.log(f"Delete entity with id - {id} in table - '{table_name}'")
         else:
-            self.logger.log(f"Delete entity with id - {id} in table - '{table_name}'")
+            self.__logger.log(f"Delete entity with id - {id} in table - '{table_name}'")
 
     def delete_database(self, database_name: str) -> bool:
         """
@@ -136,16 +137,16 @@ class DatabaseController:
         :param database_name: name of the database
         :return: result of the operation
         """
-        if self.is_static:
-            self.logger.log(f"Delete database in local db is not allowed")
+        if self.__is_static:
+            self.__logger.log(f"Delete database in local db is not allowed")
             return False
         else:
             if self.database.is_database_exists():
                 self.database.delete_database()
-                self.logger.log(f"Delete database with name - '{database_name}'")
+                self.__logger.log(f"Delete database with name - '{database_name}'")
                 return True
             else:
-                self.logger.log("Try to delete no exist database")
+                self.__logger.log("Try to delete no exist database")
                 return False
 
     ##############Select from database
@@ -157,11 +158,11 @@ class DatabaseController:
         :param id: unique identifier of the element in database
         :return: none or task entity from table
         """
-        if self.is_static:
-            self.logger.log(f"Select one entity with id - '{id}' in table - '{table_name}'")
+        if self.__is_static:
+            self.__logger.log(f"Select one entity with id - '{id}' in table - '{table_name}'")
             return self.database.view_element(table_name, id)
         else:
-            self.logger.log(f"Select one entity with id - '{id}' in table - '{table_name}'")
+            self.__logger.log(f"Select one entity with id - '{id}' in table - '{table_name}'")
 
     def select_all_from_table(self, table_name: str):
         """
@@ -169,12 +170,12 @@ class DatabaseController:
         :param table_name: name of the table
         :return: tuple value with all elements
         """
-        if self.is_static:
+        if self.__is_static:
             all_elements = self.database.view_elements(table_name)
-            self.logger.log(f"Access all entities in table - '{table_name}'")
+            self.__logger.log(f"Access all entities in table - '{table_name}'")
             return all_elements
         else:
-            self.logger.log(f"Access all entities in table - '{table_name}'")
+            self.__logger.log(f"Access all entities in table - '{table_name}'")
 
     def select_all_from_database(self, database: str):
         """
@@ -182,10 +183,10 @@ class DatabaseController:
         :param database: name of the database
         :return: none
         """
-        if self.is_static:
-            self.logger.log("Operation does not allowed in local database")
+        if self.__is_static:
+            self.__logger.log("Operation does not allowed in local database")
         else:
-            self.logger.log(f"Access all entities in database - '{database}'")
+            self.__logger.log(f"Access all entities in database - '{database}'")
 
     ##############Update and insert
 
@@ -196,11 +197,11 @@ class DatabaseController:
         :param table_name: name of the table
         :return: none
         """
-        if self.is_static:
+        if self.__is_static:
             self.database.update_element(table_name, id)
-            self.logger.log(f"Update entity with id - {id} in table - '{table_name}'")
+            self.__logger.log(f"Update entity with id - {id} in table - '{table_name}'")
         else:
-            self.logger.log(f"Update entity with id - {id} in table - '{table_name}'")
+            self.__logger.log(f"Update entity with id - {id} in table - '{table_name}'")
 
     def insert_entity_in_table(self, table_name: str, id: str, elem: ToDoTask):
         """
@@ -210,20 +211,52 @@ class DatabaseController:
         :param table_name: name of the table
         :return: none
         """
-        if self.is_static:
+        if self.__is_static:
             if self.database.is_table_exists(table_name):
                 self.database.insert_element(table_name, elem)
-                self.logger.log(f"Entity with id - {id} inserted in table - '{table_name}'")
+                self.__logger.log(f"Entity with id - {id} inserted in table - '{table_name}'")
         else:
-            self.logger.log(f"Entity with id - {id} inserted in table - '{table_name}'")
+            self.__logger.log(f"Entity with id - {id} inserted in table - '{table_name}'")
+
+    def insert_user_in_table(self, table_name: str, id: int, user):
+        """
+        Method for updating database table
+        Semantically equal to insert_entity_in_table, but need user as function input
+        And different logs output
+        :param user: user to insert in table
+        :param id: unique identifier of the user in database, int value from message
+        :param table_name: name of the table
+        :return: none
+        """
+        if self.__is_static:
+            if self.database.is_table_exists(table_name):
+                self.database.insert_element(table_name, user)
+                self.__logger.log(f"User with id - {id} inserted in table - '{table_name}'")
+        else:
+            self.__logger.log(f"User with id - {id} inserted in table - '{table_name}'")
 
     ##############Utility methods
 
     def is_database_created(self) -> bool:
+        """
+        Helper function
+        """
         return self.database.is_database_exists()
 
     def is_table_created(self, table_name) -> bool:
+        """
+        Helper function
+        """
         return self.database.is_table_exists(table_name)
 
+    def is_user_exists(self, table_name: str, id: str):
+        """
+        Helper function
+        """
+        return self.database.view_element(table_name, id)
+
     def get_database_name(self):
+        """
+        Helper function
+        """
         return self.database.database_name

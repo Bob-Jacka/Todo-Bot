@@ -1,5 +1,5 @@
 """
-Telegram bot V1.2.0
+Telegram bot
 
 You can find this bot in telegram, just enter bot name.
 Telegram bot name - @GoalGetter_and_DailyDoBot_bot
@@ -41,7 +41,10 @@ from bs4 import BeautifulSoup
 from BotSettings import (
     random_cat_gifs_site,
     random_cat_pic_site,
-    bot_age, strong_lang_danger, sexual_photos_danger, violent_danger
+    bot_age,
+    strong_lang_danger,
+    sexual_photos_danger,
+    violent_danger
 )
 from core.entities.AgeForm import AgeForm
 from core.entities.BotLogger import BotLogger
@@ -62,6 +65,7 @@ from core.handlers.ToDo_handlers.ChangeTask import ChangeTask
 from core.handlers.ToDo_handlers.DeleteTask import DeleteTask
 from core.handlers.ToDo_handlers.ViewTask import ViewTask
 
+# Create file named TelegramToken.py and place your telegram bot entity api key
 if exists(r"TelegramToken.py"):
     from TelegramToken import secret_telegram_api_key
 
@@ -108,17 +112,13 @@ async def init_keyboard():
     :return: initialized keyboard
     """
     try:
-        button1 = KeyboardButton(text="View to do")
-        button2 = KeyboardButton(text="Delete task")
-        button3 = KeyboardButton(text="Update task")
-        button4 = KeyboardButton(text="Add task")
-        buttons: list[list] = list()
-        buttons.append(list())
-        buttons[0].append(button1)
-        buttons[0].append(button2)
-        buttons[0].append(button3)
-        buttons[0].append(button4)
-        custom_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+        kb = [
+            [KeyboardButton(text="View to do")],
+            [KeyboardButton(text="Delete task")],
+            [KeyboardButton(text="Update task")],
+            [KeyboardButton(text="Add task")],
+        ]
+        custom_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=kb)
         logger.log("Keyboard initialized")
         return custom_keyboard
     except Exception as e:
@@ -130,8 +130,11 @@ async def bot_start(message: Message = None):
     try:
         global keyboard
         keyboard = await init_keyboard()
+        await message.answer(text='Клавиатура инициализирована, внимание на доп. меню!', reply_markup=keyboard)
         db_controller.create_database("LocalDB" + str(message.chat.id) + " - database")
-        logger.log(db_controller.get_database_name() + " created")
+        db_controller.create_table('test_table_tasks')  # one table for tasks
+        db_controller.create_table('log_table')  # table for logs and exceptions
+        db_controller.create_table('test_user_table')  # another table for users
         logger.log('Bot started working!!')
 
         await user_age_analyze(message)
@@ -150,10 +153,21 @@ async def user_age_analyze(message: Message) -> None:
         await bot_entity.send_message(message.chat.id, "Вам будут заданы некоторые простые (с виду) вопросы")
         await bot_entity.send_message(message.chat.id, "Итак, начнем...")
 
+        user_form = AgeForm()
+        logger.log(user_form is not None if 'user form created' else 'user form is not created')
+
         # Age form flow start:
-        await AgeForm.name.set()
+        await user_form.name
         await message.reply("Привет! Как тебя зовут?")
 
+        await user_form.gender
+        await message.reply('Какого ты пола?')
+
+        await user_form.age
+        await message.reply('Сколько тебе лет?')
+
+        # insert user in table
+        db_controller.insert_user_in_table('test_table', message.from_user.id, user_form)
     except Exception as e:
         logger.log(f"An exception occurred in user age analyze - {e.with_traceback(None)}")
 
@@ -184,7 +198,10 @@ async def hi_handler(message: Message):
     """
     try:
         logger.log(f"Bot received hi action")
-        await message.answer(message.text.removeprefix('/'))
+        if bot_age > strong_lang_danger:
+            pass
+        else:
+            await message.answer(message.text.removeprefix('/'))
     except Exception as e:
         logger.log(f"An exception occurred in hi handler output - {e.with_traceback(None)}")
 
@@ -198,7 +215,10 @@ async def bye_handler(message: Message):
     """
     try:
         logger.log(f"Bot received bye action")
-        await message.answer(message.text.removesuffix('/'))
+        if bot_age > strong_lang_danger:
+            pass
+        else:
+            await message.answer(message.text.removesuffix('/'))
     except Exception as e:
         logger.log(f"An exception occurred in bye handler output - {e.with_traceback(None)}")
 
@@ -215,7 +235,7 @@ async def help_handler(message: Message):
         chat_id = message.chat.id
         await bot_entity.send_message(chat_id, """
             This bot is needed when you have some important tasks.
-            1) You can add, delete, view and change task
+            1) You can add, delete, view and change tasks
             2) Bot will notify you if it is time to action
             3) three is too many points in help menu, you know
             """)
@@ -332,14 +352,14 @@ async def default_txt_handler(message: Message):
         user_name = message.from_user.username
         match coin_flip:
             case 'gif':
-                outputfile = get_video_from_url(random_cat_gifs_site)
+                outputfile = __get_video_from_url(random_cat_gifs_site)
                 await bot_entity.send_video(chat_id, outputfile)
                 logger.log(user_name + ' received gif video from bot')
                 os.remove(outputfile.filename)
                 logger.log("Video deleted from local")
 
             case 'pic':
-                outputfile = get_image_from_url(random_cat_pic_site)
+                outputfile = __get_image_from_url(random_cat_pic_site)
                 await bot_entity.send_photo(chat_id, outputfile)
                 logger.log(user_name + ' received picture from bot')
                 os.remove(outputfile.filename)
@@ -365,7 +385,7 @@ def __download_res(res_url: str):
         return FSInputFile(filename)
 
 
-def get_image_from_url(url: str) -> FSInputFile | None:
+def __get_image_from_url(url: str) -> FSInputFile | None:
     """
     Get cat image from site.
     :param url: url to random cat site.
@@ -391,7 +411,7 @@ def get_image_from_url(url: str) -> FSInputFile | None:
         logger.log(f"Error in get image from url - {e}")
 
 
-def get_video_from_url(url: str) -> FSInputFile | None:
+def __get_video_from_url(url: str) -> FSInputFile | None:
     """
     Get cat image from site.
     :param url: url to random cat site.
@@ -457,7 +477,10 @@ async def default_video_handler(message: Message):
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent video')
-        await bot_entity.send_message(message.chat.id, "It is not a funny video.")
+        if bot_age > sexual_photos_danger:
+            pass
+        else:
+            await bot_entity.send_message(message.chat.id, "It is not a funny video.")
     except Exception as e:
         logger.log(f'Error in video handle - {e.with_traceback(None)}')
 
@@ -471,7 +494,10 @@ async def default_document_handler(message: Message):
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent document to chat')
-        await bot_entity.send_message(message.chat.id, "It is not a secret document.")
+        if bot_age > violent_danger:
+            await bot_entity.send_message(message.chat.id, "It is not a secret document.")
+        else:
+            pass
     except Exception as e:
         logger.log(f'Error in emoji (sticker) handle - {e.with_traceback(None)}')
 
@@ -485,7 +511,10 @@ async def default_geo_handler(message: Message):
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent geo to chat')
-        await bot_entity.send_message(message.chat.id, "I remember this address when I will destroy humanity.")
+        if bot_age > violent_danger:
+            await bot_entity.send_message(message.chat.id, "I remember this address when I will destroy humanity.")
+        else:
+            pass
     except Exception as e:
         logger.log(f'Error in emoji (sticker) handle - {e.with_traceback(None)}')
 
@@ -500,7 +529,8 @@ async def default_audio_handler(message: Message):
     try:
         logger.log(f'User with username - {message.from_user.username} sent audio to chat')
         if bot_age >= violent_danger:
-            await bot_entity.send_message(message.chat.id, "I do not know who you are, but i will find you and kill you.")
+            await bot_entity.send_message(message.chat.id,
+                                          "I do not know who you are, but i will find you and kill you.")
         else:
             pass
     except Exception as e:
@@ -534,7 +564,10 @@ async def default_gift_handler(message: Message):
     try:
         chat_id = message.chat.id
         logger.log(f'User with username - {message.from_user.username} sent gift to chat')
-        await bot_entity.send_message(chat_id, "Ой как неожиданно и приятно.")
+        if bot_age > strong_lang_danger:
+            await bot_entity.send_message(chat_id, "Ой как неожиданно и приятно.")
+        else:
+            await bot_entity.send_message(chat_id, "Ой как неожиданно и приятно.")
     except Exception as e:
         logger.log(f'Error in gift handle - {e.with_traceback(None)}')
 
@@ -548,7 +581,10 @@ async def default_voice_handler(message: Message):
     """
     try:
         logger.log(f'User with username - {message.from_user.username} sent voice to chat')
-        await bot_entity.send_message(message.chat.id, "I hate voice messages.")
+        if bot_age > strong_lang_danger:
+            await bot_entity.send_message(message.chat.id, "I hate voice messages.")
+        else:
+            await bot_entity.send_message(message.chat.id, "Нет спасибо")
     except Exception as e:
         logger.log(f"An error occurred in voice handle - {e.with_traceback(None)}")
 

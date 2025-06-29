@@ -2,6 +2,7 @@ from abc import (
     ABC,
     abstractmethod
 )
+from typing import Any
 
 
 class AbstractDatabase(ABC):
@@ -11,14 +12,14 @@ class AbstractDatabase(ABC):
     If you need to implement Database, inherit this class and override methods
     """
 
-    database_name: str
+    __database_name: str
 
     # elements methods in database
 
     @abstractmethod
-    def insert_element(self) -> bool:
+    def insert_element(self, table_name: str, task: Any) -> bool:
         """
-        Method for viewing element from table.
+        Method for inserting element in table.
         Select * from <table name> is equivalent in sql for this statement
         :return: bool result of the operation
         """
@@ -36,7 +37,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def update_element(self, table_name: str, id: str) -> bool:
         """
-
+        Method for updating element in table.
         :param table_name: name of the table
         :param id: unique identifier of the element
         :return: bool result of the operation
@@ -46,7 +47,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def delete_element(self, id: str) -> bool:
         """
-
+        Method for deleting element from table.
         :param id: unique identifier of the element
         :return: bool result of the operation
         """
@@ -57,7 +58,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def create_table(self, table_name: str) -> bool:
         """
-
+        Method for creating table.
         :param table_name: name of the table to create
         :return: bool result of the operation
         """
@@ -66,7 +67,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def delete_table(self, id: str) -> bool:
         """
-
+        Method for deleting table.
         :param id: identifier of the table
         :return: bool result of the operation
         """
@@ -75,7 +76,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def create_database(self) -> bool:
         """
-
+        Method for creating database.
         :return: bool result of the operation
         """
         pass
@@ -83,7 +84,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def delete_database(self) -> bool:
         """
-
+        Method for deleting database.
         :return: bool result of the operation
         """
         pass
@@ -93,7 +94,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def is_table_exists(self, table_name: str) -> bool:
         """
-
+        Helper function
         :param table_name:
         :return: bool result of the operation
         """
@@ -102,7 +103,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def is_database_exists(self) -> bool:
         """
-
+        Helper function
         :return: bool result of the operation
         """
         pass

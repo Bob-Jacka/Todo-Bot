@@ -1,27 +1,25 @@
+import logging
 from datetime import datetime
-from logging import Logger
 from typing import TextIO
 
-from typing_extensions import override
 
-
-class BotLogger(Logger):
+class BotLogger:
     """
-    Custom logger class for telegram bot.
+    Custom logger class for telegram bot / Locust test and С+ web doc.
     """
 
-    log_file: TextIO
-    is_file_write: bool
+    __log_file: TextIO  # file for logs
+    __logger: logging.Logger  # private instance of composite logger
+    __is_file_write: bool  # is need write to file
 
     def __init__(self, name: str, is_file_write: bool = False):
-        super().__init__(name)
+        self.__logger = logging.getLogger(name)
         if is_file_write:
-            self.is_file_write = True
+            self.__is_file_write = True
             self.__get_log_file()
         else:
-            self.is_file_write = False
+            self.__is_file_write = False
 
-    @override
     def log(self, msg: str, *args, level=1, exc_info=None, stack_info=False, stacklevel=1, extra=None):
         """
         Method for writing logs
@@ -35,11 +33,13 @@ class BotLogger(Logger):
         :return: None
         """
         try:
-            formated_msg = f"{(datetime.now())}: {msg}."
-            if self.is_file_write:
-                self.log_file.write(formated_msg)
+            formated_msg = f"{(datetime.now())}: '{msg}'."
+            if self.__is_file_write:
+                self.__log_file.write(formated_msg)
+                self.__logger.log(msg=formated_msg, stacklevel=stacklevel, level=level)
                 print(formated_msg)
             else:
+                self.__logger.log(msg=formated_msg, stacklevel=stacklevel, level=level)
                 print(formated_msg)
         except Exception as e:
             print(f"Error occurred while writing log file - {e}")
@@ -50,10 +50,10 @@ class BotLogger(Logger):
         :return: None
         """
         try:
-            self.log_file = open("../bot_logs_file.log")
+            self.__log_file = open("../bot_logs_file.log")
         except Exception as e:
             print(f"{(datetime.now())}: Exception occurred in logger - {e}.")
-            self.log_file.close()
+            self.__log_file.close()
 
     def __close_log_file(self):
         """
@@ -61,7 +61,7 @@ class BotLogger(Logger):
         :return: None
         """
         try:
-            self.log_file.close()
+            self.__log_file.close()
         except Exception as e:
             print(f"{(datetime.now())}: Error in closing log file - {e}.")
 
@@ -70,43 +70,24 @@ class BotLogger(Logger):
         Method for is writing info
         :return:
         """
-        return self.is_file_write
+        return self.__is_file_write
 
     def get_log_file(self):
         """
         Method for getting log file descriptor
         :return:
         """
-        return self.log_file
+        return self.__log_file
 
-    @override
-    def setLevel(self, level):
-        super().setLevel(level)
+    def get_log_file_name(self):
+        """
+        Getter method for log file name
+        """
+        return self.__log_file.name
 
-    @override
-    def debug(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().debug(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def info(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().info(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def warning(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().warning(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def warn(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().warn(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def error(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().error(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def exception(self, msg, *args, exc_info=True, stack_info=False, stacklevel=1, extra=None):
-        super().exception(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-
-    @override
-    def critical(self, msg, *args, exc_info=None, stack_info=False, stacklevel=1, extra=None):
-        super().critical(msg, *args, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
+    def set_log_file_name(self):
+        """
+        Setter method for logger
+        :return: None
+        """
+        pass

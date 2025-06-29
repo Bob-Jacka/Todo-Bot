@@ -1,3 +1,5 @@
+from typing import Any
+
 from typing_extensions import override
 
 from core.entities.BotLogger import BotLogger
@@ -6,7 +8,7 @@ from core.entities.ToDoTask import ToDoTask
 
 
 class LocalDatabase(AbstractDatabase):
-    database_name: str
+    __database_name: str
     tables: dict[str, list[ToDoTask]]
     local_logger: BotLogger  # local logger for local database for local logging your local data.
 
@@ -24,7 +26,7 @@ class LocalDatabase(AbstractDatabase):
     ### Insert
 
     @override
-    def insert_element(self, table_name: str, task: ToDoTask) -> bool:
+    def insert_element(self, table_name: str, task: Any) -> bool:
         """
         Method for inserting one element
         :param table_name: name of the table
@@ -105,6 +107,10 @@ class LocalDatabase(AbstractDatabase):
             self.local_logger.log(f"Exception during creating tables with names - {table_name} - {e}")
             return False
 
+    @override
+    def create_database(self) -> bool:
+        pass
+
     ### Delete
 
     @override
@@ -163,6 +169,10 @@ class LocalDatabase(AbstractDatabase):
             self.local_logger.log(f"Exception during deleting element - {e}")
             return False
 
+    @override
+    def delete_database(self) -> bool:
+        pass
+
     ### Update
 
     @override
@@ -203,6 +213,7 @@ class LocalDatabase(AbstractDatabase):
         except Exception as e:
             self.local_logger.log(f"Exception during insert element - {e}")
 
+    @override
     def view_elements(self, table_name: str, *ids: str) -> tuple[ToDoTask]:
         """
         Method for selecting all from database
